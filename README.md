@@ -19,3 +19,10 @@ Tagging function: Apply "quarantined" tag for tracking
 
 
 Use Step Functions to orchestrate: Detection → Assessment → Isolation → Snapshot → Notify
+Phase 3: Forensics & Recovery
+
+Create a forensics VPC where isolated instances can be analyzed
+Document your playbook: what triggers what response
+Add automatic ticket creation in a system like Jira
+
+Tech Stack: GuardDuty, EventBridge, Lambda (Python), Step Functions, SNS, Terraform for infrastructure
