@@ -1,0 +1,24 @@
+[project]
+name = "ir-automation"
+version = "1.0.0"
+description = "AWS GuardDuty incident response playbooks"
+requires-python = ">=3.12"
+dependencies = ["boto3>=1.35"]
+
+[tool.setuptools.packages.find]
+where = ["lambdas/src"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "lambdas/src"]
+testpaths = ["tests"]
+filterwarnings = [
+  "ignore:datetime.datetime.utcnow\\(\\) is deprecated:DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 120
+src = ["lambdas/src", "tests", "scripts"]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
