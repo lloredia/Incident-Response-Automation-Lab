@@ -1,0 +1,145 @@
+{
+  "Comment": "Route a GuardDuty finding to the matching containment playbook.",
+  "StartAt": "RouteByFindingType",
+  "States": {
+    "RouteByFindingType": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.detail.type",
+          "StringMatches": "*:EC2/*",
+          "Next": "ContainEc2"
+        },
+        {
+          "Variable": "$.detail.type",
+          "StringMatches": "*:IAMUser/*",
+          "Next": "ContainIam"
+        },
+        {
+          "Variable": "$.detail.type",
+          "StringMatches": "*:S3/*",
+          "Next": "ContainS3"
+        }
+      ],
+      "Default": "NotifyUnsupported"
+    },
+    "ContainEc2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ec2_lambda_arn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.playbookResult",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "ResponseComplete"
+    },
+    "ContainIam": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${iam_lambda_arn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.playbookResult",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "ResponseComplete"
+    },
+    "ContainS3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${s3_lambda_arn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.playbookResult",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "ResponseComplete"
+    },
+    "NotifyUnsupported": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${notify_lambda_arn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.playbookResult",
+      "Next": "ResponseComplete"
+    },
+    "NotifyFailure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${notify_lambda_arn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.failureNotification",
+      "Next": "ResponseFailed"
+    },
+    "ResponseComplete": {
+      "Type": "Succeed"
+    },
+    "ResponseFailed": {
+      "Type": "Fail",
+      "Error": "PlaybookFailed",
+      "Cause": "Containment failed after the failure notification ran."
+    }
+  }
+}

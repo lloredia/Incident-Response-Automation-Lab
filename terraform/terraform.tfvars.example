@@ -1,0 +1,22 @@
+aws_region     = "us-east-1"
+environment    = "lab"
+project_name   = "ir-lab"
+min_severity   = 1
+containment_mode = "enforce"
+
+# Confirm this address after apply. Leave empty to skip the email subscription.
+notification_email = "you@example.com"
+
+# Leave empty for SNS only. The value is stored as a SecureString and in Terraform state.
+slack_webhook_url = ""
+
+# Optional analyst SSH into a quarantined instance. Empty means no ingress and no egress.
+quarantine_ssh_cidr = ""
+
+enable_cloudtrail         = true
+enable_forensics_vpc      = true
+enable_s3_data_events     = true
+create_guardduty_detector = true
+existing_detector_id      = ""
+restrict_to_account       = false
+log_retention_days        = 365
